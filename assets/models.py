@@ -1,7 +1,7 @@
 '''
 @Author: your name
 @Date: 2020-03-11 05:13:56
-@LastEditTime: 2020-03-11 21:30:42
+@LastEditTime: 2020-03-12 06:36:17
 @LastEditors: Please set LastEditors
 @Description: In User Settings Edit
 @FilePath: /CMDB/assets/models.py
@@ -105,7 +105,7 @@ class SecurityDevice(models.Model):
         verbose_name = '安全设备'
         verbose_name_plural = '安全设备'
 
-
+# 存储设备
 class StorageDevice(models.Model):
     '''存储设备'''
     sub_asset_type_choice = (
@@ -126,7 +126,7 @@ class StorageDevice(models.Model):
         verbose_name = '存储设备'
         verbose_name_plural = '存储设备'
 
-
+# 网卡设备
 class NetworkDevice(models.Model):
     '''网络设备'''
     sub_asset_type_choice = (
@@ -152,7 +152,7 @@ class NetworkDevice(models.Model):
         verbose_name = '网络设备'
         verbose_name_plural = '网络设备'
 
-
+# 软件
 class Software(models.Model):
     '''只保存付费购买的软件'''
     sub_asset_type_choice = (
@@ -171,3 +171,115 @@ class Software(models.Model):
     class Meta:
         verbose_name = '软件/系统'
         verbose_name_plural = '软件/系统'
+    
+'''
+    机房、制造商、业务线、合同、资产标签等数据模型
+'''
+class IDC(models.Model):
+    '''机房'''
+    name = models.CharField(unique=True, max_length=64, verbose_name='机房名称')
+    memo = models.CharField(blank=True, null=None, max_length=128, verbose_name='备注')
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = '机房'
+        verbose_name_plural = '机房'
+
+
+class Manufacture(models.Model):
+    '''厂商'''
+    name = models.CharField('厂商名称', unique=True, max_length=64)
+    telephone = models.CharField('支持电话', max_length=30, blank=True, null=True)
+    memo = models.CharField('备注', max_length=128, blank=True, null=True)
+    
+    def __str__(self):
+        return self.name
+    
+    class Meta:
+        verbose_name = '厂商'
+        verbose_name_plural = '厂商'
+
+
+class BusinessUnit(models.Model):
+    """业务线"""
+    parent_unit = models.ForeignKey('self', blank=True, null=True, relate_name='parent_level', on_delete=models.SET_NULL)
+    name = models.CharField('业务线', max_length=64, unique=True)
+    memo = models.CharField('备注', max_length=64, blank=True, null=True)
+
+    def __str__(self):
+        return self.name
+    
+    class Meta:
+        verbose_name = '业务线'
+        verbose_name_plural = '业务线'
+
+
+class Contract(models.Model):
+    '''合同'''
+    sn = models.CharField('合同号', max_length=128, unique=True)
+    name = models.CharField('合同名称', max_length=64)
+    memo = models.TextField('备注', blank=True, null=True)
+    price = models.IntegerField('合同金额')
+    detail = models.TextField('合同详细', blank=True, null=True)
+    start_day = models.DateField('开始日期', blank=True, null=True)
+    end_day = models.DateField('失效日期', blank=True, null=True)
+    license_num = models.IntegerField('license数量', blank=True, null=True)
+    c_day = models.DateField('创建日期', auto_now_add=True)
+    m_day = models.DataField('修改日期', auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = '合同'
+        verbose_name_plural = '合同'
+
+
+class Tag(models.Model):
+    '''标签'''
+    name = models.CharField('标签名', max_length=32, unique=True)
+    c_day = models.DateField('创建日期', auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+    
+    class Meta:
+        verbose_name = '标签'
+        verbose_name_plural = '标签'
+
+
+class CPU(models.Model):
+    '''CPU组件'''
+    asset = models.OneToONeField('Asset', on_delete=model.CASCADE)
+    CPU_model = models.CharField('CPU型号', max_length=128, blank=True, null=True)
+    CPU_count = models.PositiveSmallIntegerField('物理CPU个数', default=1)
+    CPU_core_count = models.PositiveSmallIntegerField('CPU核数', default=1)
+
+    def __self__(self):
+        return self.asset.name + ":  " + self.CPU_model
+
+    class Meta:
+        verbose_name = 'CPU'
+        verbose_name_plural = 'CPU'
+    
+
+class RAM(models.Model):
+    asset = models.ForeignKey('Asset', on_delete=models.CASCADE)
+    sn = models.CharField('型号', max_length=128, blank=True, null=True)
+    model = models.CharField('内存型号', max_length=128, blank=True, null=True)
+    manufacturer = models.CharField('内存制造商', max_length=128, blank=True, null=True)
+    slot = models.CharField('插槽', max_length=64)
+    capacity = models.IntegerField('内存大小(GB)', blank=True, null=True)
+
+    def __str__(self):
+        return '%s: %s: %s: %s' % (self.asset.name, self.model, self.slot, self.capacity)
+    
+    class Meta:
+        verbose_name = '内存'
+        verbose_name_plural = '内存'
+        unique_together = ('asset', 'slot')
+
+    
+
